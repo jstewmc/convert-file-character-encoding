@@ -1,0 +1,24 @@
+{
+	"name": "jstewmc/convert-file-character-encoding",
+	"description": "Convert a file's character encoding",
+	"keywords": ["php", "jstewmc", "convert", "file", "encoding"],
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Jack Clayton",
+			"email": "clayjs0@gmail.com"	
+		}
+	],
+	"require": {
+		"php": "^7.0"
+	},
+	"require-dev": {
+		"jstewmc/test-case": "^1.0",
+		"mikey179/vfsstream": "^1.6"
+	},
+	"autoload": {
+		"psr-4": {
+			"Jstewmc\\ConvertFileCharacterEncoding\\": "src/"
+		}
+	}
+}
