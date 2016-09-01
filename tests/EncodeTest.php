@@ -1,21 +1,21 @@
 <?php
 /**
- * The file for the convert-file-character-encoding service tests
+ * The file for the encode-file service tests
  *
  * @author     Jack Clayton <clayjs0@gmail.com>
  * @copyright  2016 Jack Clayton
  * @license    MIT
  */
 
-namespace Jstewmc\ConvertFileCharacterEncoding;
+namespace Jstewmc\EncodeFile;
 
 use Jstewmc\TestCase\TestCase;
 use org\bovigo\vfs\{vfsStream, vfsStreamDirectory, vfsStreamFile};
 
 /**
- * Tests for the convert-file-character-encoding service
+ * Tests for the encode-file service
  */
-class ConvertTest extends TestCase
+class EncodeTest extends TestCase
 {
     /**
      * @var  vfsStreamDirectory  the "root" virtual file system directory
@@ -55,7 +55,7 @@ class ConvertTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        new Convert('foo');
+        new Encode('foo');
         
         return;
     }
@@ -67,7 +67,7 @@ class ConvertTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        new Convert('UTF-8', 'foo');
+        new Encode('UTF-8', 'foo');
         
         return;
     }
@@ -79,7 +79,7 @@ class ConvertTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        new Convert('UTF-8', 'UTF-8');
+        new Encode('UTF-8', 'UTF-8');
         
         return;   
     }
@@ -92,7 +92,7 @@ class ConvertTest extends TestCase
         $to   = 'Windows-1252';
         $from = 'UTF-8';
         
-        $service = new Convert($to, $from);
+        $service = new Encode($to, $from);
         
         $this->assertEquals($to, $this->getProperty('to', $service));
         $this->assertEquals($from, $this->getProperty('from', $service));
@@ -110,7 +110,7 @@ class ConvertTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        (new Convert())(vfsStream::url('test/path/to/file.php'));
+        (new Encode())(vfsStream::url('test/path/to/file.php'));
         
         return;
     }
@@ -126,7 +126,7 @@ class ConvertTest extends TestCase
         
         new vfsStreamFile($filename, 0000);
         
-        (new Convert())(vfsStream::url($filename));
+        (new Encode())(vfsStream::url($filename));
         
         return;
     }
@@ -156,7 +156,7 @@ class ConvertTest extends TestCase
         // do not give the service a "from" encoding
         // keep in mind, this will force the service to detect the file's encoding
         //
-        $service = new Convert('UTF-8');
+        $service = new Encode('UTF-8');
         
         // convert the file's encoding
         // keep in mind, this should short-circuit without changing anything
@@ -192,7 +192,7 @@ class ConvertTest extends TestCase
         // do not give the service a "from" encoding...
         // keep in mind, this will force the service to detect the file's encoding
         //
-        $service = new Convert('UTF-32');
+        $service = new Encode('UTF-32');
         
         // convert the file's encoding
         $service($filename);
@@ -217,7 +217,7 @@ class ConvertTest extends TestCase
         
         new vfsStreamFile($filename, 0444);
         
-        (new Convert())(vfsStream::url($filename));
+        (new Encode())(vfsStream::url($filename));
         
         return;
     }

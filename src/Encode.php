@@ -1,24 +1,24 @@
 <?php
 /**
- * The file for the convert-file-character-encoding service
+ * The file for the encode-file service
  *
  * @author     Jack Clayton <clayjs0@gmail.com>
  * @copyright  2016 Jack Clayton 
  * @license    MIT
  */
 
-namespace Jstewmc\ConvertFileCharacterEncoding;
+namespace Jstewmc\EncodeFile;
 
 use InvalidArgumentException;
 use OutOfBoundsException;
 use RuntimeException;
 
 /**
- * The convert-file-character-encoding service
+ * The encode-file service
  *
  * @since  0.1.0
  */
-class Convert
+class Encode
 {
     /* !Private properties */
     

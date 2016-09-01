@@ -1,8 +1,8 @@
-# convert-file-character-encoding
-Convert a file's character-encoding.
+# encode-file
+Encode a file.
 
 ```php
-use Jstewmc\ConvertFileCharacterEncoding\Convert;
+use Jstewmc\EncodeFile\Encode;
 
 // set the filename
 $filename = '/path/to/foo.txt';
@@ -17,7 +17,7 @@ file_put_contents($filename, $contents);
 mb_check_encoding(file_get_contents($filename), 'UTF-32');  // returns false
 
 // create the service
-$service = new Convert('UTF-32');
+$service = new Encode('UTF-32');
 
 // convert the file to UTF-32
 $service($filename);
@@ -37,7 +37,7 @@ It's difficult to detect a string's character encoding, and PHP's [`mb_detect_en
 To prevent erroneously detecting the file's _from_ encoding, you MAY include it as the service's second constructor argument if it's known:
 
 ```php
-use Jstewmc\ConvertFileCharacterEncoding\Convert;
+use Jstewmc\EncodeFile\Encode;
 
 // convert files to UTF-8 from Windows-1252
 $service = new Convert('UTF-8', 'Windows-1252');
@@ -62,9 +62,13 @@ This library will throw an exception in the following situations:
 
 ## License
 
-[MIT](https://github.com/jstewmc/convert-file-character-encoding/blob/master/LICENSE)
+[MIT](https://github.com/jstewmc/encode-file/blob/master/LICENSE)
 
 ## Version
+
+### 0.2.0, August 31, 2016
+
+* Rename repository to `encode-file`
 
 ### 0.1.0, August 27, 2016
 

@@ -1,7 +1,7 @@
 {
-	"name": "jstewmc/convert-file-character-encoding",
-	"description": "Convert a file's character encoding",
-	"keywords": ["php", "jstewmc", "convert", "file", "encoding"],
+	"name": "jstewmc/encode-file",
+	"description": "Encode a file.",
+	"keywords": ["php", "jstewmc", "encode", "file"],
 	"license": "MIT",
 	"authors": [
 		{
@@ -18,7 +18,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Jstewmc\\ConvertFileCharacterEncoding\\": "src/"
+			"Jstewmc\\EncodeFile\\": "src/"
 		}
 	}
 }
