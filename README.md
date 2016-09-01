@@ -32,6 +32,8 @@ mb_check_encoding(file_get_contents($filename), 'UTF-32');  // returns true
 
 This library requires PHP's non-default [`mbstring`](http://php.net/manual/en/book.mbstring.php) extension. If the service is instantiated without the `mbstring` extension loaded, a `RuntimeException` will be thrown.
 
+This library also depends on the [jstewmc/read-file](https://github.com/jstewmc/read-file) and [jstewmc/write-file](https://github.com/jstewmc/write-file) services.
+
 ## From encoding
 
 It's difficult to detect a string's character encoding. Even PHP's [`mb_detect_encoding()`](http://php.net/manual/en/function.mb-detect-encoding.php) function is not perfect. For example, `mb_detect_encoding()` will almost never detect _Windows-1252_ encoding, even if the string actually is _Windows-1252_ encoded (see [Bug #64667](https://bugs.php.net/bug.php?id=64667) for details).
