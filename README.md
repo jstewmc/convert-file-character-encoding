@@ -3,6 +3,8 @@ Encode a file.
 
 ```php
 use Jstewmc\EncodeFile\Encode;
+use Jstewmc\ReadFile\Read;
+use Jstewmc\WriteFile\Write;
 
 // set the filename
 $filename = '/path/to/foo.txt';
@@ -17,10 +19,10 @@ file_put_contents($filename, $contents);
 mb_check_encoding(file_get_contents($filename), 'UTF-32');  // returns false
 
 // create the service
-$service = new Encode('UTF-32');
+$service = new Encode(new Read(), new Write());
 
 // convert the file to UTF-32
-$service($filename);
+$service($filename, 'UTF-32');
 
 // is the file UTF-32 encoded?
 mb_check_encoding(file_get_contents($filename), 'UTF-32');  // returns true
@@ -30,31 +32,22 @@ mb_check_encoding(file_get_contents($filename), 'UTF-32');  // returns true
 
 This library requires PHP's non-default [`mbstring`](http://php.net/manual/en/book.mbstring.php) extension. If the service is instantiated without the `mbstring` extension loaded, a `RuntimeException` will be thrown.
 
-## Detect encoding
+## From encoding
 
-It's difficult to detect a string's character encoding, and PHP's [`mb_detect_encoding()`](http://php.net/manual/en/function.mb-detect-encoding.php) function is not perfect. For example, `mb_detect_encoding()` will almost never detect _Windows-1252_ encoding, even if the string actually is _Windows-1252_ encoded (see [Bug #64667](https://bugs.php.net/bug.php?id=64667) for details).
+It's difficult to detect a string's character encoding. Even PHP's [`mb_detect_encoding()`](http://php.net/manual/en/function.mb-detect-encoding.php) function is not perfect. For example, `mb_detect_encoding()` will almost never detect _Windows-1252_ encoding, even if the string actually is _Windows-1252_ encoded (see [Bug #64667](https://bugs.php.net/bug.php?id=64667) for details).
 
-To prevent erroneously detecting the file's _from_ encoding, you MAY include it as the service's second constructor argument if it's known:
+To prevent erroneously detecting the file's _from_ encoding, you MAY include it as the service's third argument:
 
 ```php
 use Jstewmc\EncodeFile\Encode;
+use Jstewmc\ReadFile\Read;
+use Jstewmc\WriteFile\Write;
 
-// convert files to UTF-8 from Windows-1252
-$service = new Convert('UTF-8', 'Windows-1252');
+$service = new Encode(new Read(), new Write());
 
+// encode file as UTF-8 from Windows-1252
+$service('/path/to/file.txt', 'UTF-8', 'Windows-1252');
 ```
-
-## Exceptions
-
-This library will throw an exception in the following situations:
-
-* If the `mbstring` extension is not loaded (`RuntimeException`); 
-* If the _to_ encoding is not valid (`InvalidArgumentException`);
-* If the _from_ encoding is not valid (`InvalidArgumentException`);
-* If the _to_ and _from_ encoding are equal (`InvalidArgumentException`);
-* If the file is not readable (`InvalidArgumentException`);
-* If the file's character-encoding cannot be detected (`OutOfBoundsException`); or,
-* If the file is not writeable (`InvalidArgumentException`).
 
 ## Author
 
@@ -69,6 +62,7 @@ This library will throw an exception in the following situations:
 ### 0.2.0, August 31, 2016
 
 * Rename repository to `encode-file`
+* Refactor library to use [jstewmc/read-file](https://github.com/jstewmc/read-file) and [jstewmc/write-file](https://github.com/jstewmc/write-file)
 
 ### 0.1.0, August 27, 2016
 
