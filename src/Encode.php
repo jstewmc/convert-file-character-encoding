@@ -9,30 +9,34 @@
 
 namespace Jstewmc\EncodeFile;
 
+use BadMethodCallException;
 use InvalidArgumentException;
+use Jstewmc\ReadFile\Read;
+use Jstewmc\WriteFile\Write;
 use OutOfBoundsException;
-use RuntimeException;
+
 
 /**
  * The encode-file service
  *
  * @since  0.1.0
+ * @since  0.2.0  refactor to use read- and write-file services
  */
 class Encode
 {
     /* !Private properties */
     
     /**
-     * @var    string  the name of the "from" encoding (optional)
-     * @since  0.1.0
+     * @var    Read  the read-file service
+     * @since  0.2.0
      */
-    private $from;
+    private $read;
     
     /**
-     * @var    string  the name of the "to" encoding
-     * @since  0.1.0
+     * @var    Write  the write-file service
+     * @since  0.2.0
      */
-    private $to;
+    private $write;
     
     
     /* !Magic methods */
@@ -40,180 +44,87 @@ class Encode
     /**
      * Called when the service is constructed
      *
-     * @param   string  $to    the name of the "to" encoding (optional; if omitted, 
-     *     defaults to "UTF-8")
-     * @param   string  $from  the name of the "from" encoding (optional; if omitted,
-     *     will attempt to be detected, which is not always accurate)
-     * @throws  RuntimeException          if "mbstring" library is not loaded
-     * @throws  InvalidArgumentException  if $to is not a valid encoding name
-     * @throws  InvalidArgumentException  if $from is not a valid encoding name
-     * @throws  InvalidArgumentException  if $to and $from are same encoding
-     * @since   0.1.0
+     * @param   Read   $read   the read-file service
+     * @param   Write  $write  the write-file service
+     * @throws  BadMethodCallException  if "mbstring" extension is not loaded
+     * @since   0.2.0  
      */
-    public function __construct(string $to = 'UTF-8', string $from = null)
+    public function __construct(Read $read, Write $write)
     {
         // if the "mbstring" extension is not loaded, short-circuit
         if ( ! extension_loaded('mbstring')) {
-            throw new RuntimeException(
+            throw new BadMethodCallException(
                 "This library requires the 'mbstring' PHP extension"
             );
         }
         
-        // if $to is invalid encoding, short-circuit
-        if ( ! in_array($to, mb_list_encodings())) {
-            throw new InvalidArgumentException(
-                __METHOD__ . "() expects parameter one, to, to be a valid "
-                    . "mbstring character-encoding name"
-            );
-        }
-        
-        // if $from is given but invalid encoding, short-circuit
-        if ($from !== null && ! in_array($from, mb_list_encodings())) {
-            throw new InvalidArgumentException(
-                __METHOD__ . "() expects parameter two, from, to be a valid "
-                    . "mbstring character-encoding name or null"
-            );
-        }
-        
-        // if $from and $to are the same encoding, short-circuit
-        if ($from === $to) {
-            throw new InvalidArgumentException(
-                __METHOD__ . "() expects parameter one, to, and parameter two, "
-                    . "from, to be different character-encodings"
-            );
-        }
-        
-        $this->to   = $to;
-        $this->from = $from;
+        $this->read  = $read;
+        $this->write = $write;
     }
     
     /**
      * Called when the service is treated like a function
      *
      * @param   string  $filename  the file's name
+     * @param   string  $to        the "to" encoding (optional, defaults to "UTF-8")
+     * @param   string  $from      the "from" encoding (optional, will be detected)
      * @return  void
-     * @throws  InvalidArgumentException  if the file is not readable
-     * @throws  InvalidArgumentException  if the file is not writeable
-     * @throws  UnexpectedValueException  if the file's "from" encoding is not 
-     *     given and cannot be detected
-     * @since   0.1.0
+     * @throws  InvalidArgumentException  if $to is not a valid encoding
+     * @throws  InvalidArgumentException  if $from is neither valid encoding nor null
+     * @throws  OutOfBoundsException      if $from is null and cannot be detected
+     * @since   0.2.0
      */
-    public function __invoke(string $filename)
-    {
-        // get the file's contents
-        $contents = $this->read($filename);
+    public function __invoke(
+        string $filename, 
+        string $to = 'UTF-8', 
+        string $from = null
+    ) {
+        // if the "to" encoding is not valid, short-circuit
+        if ( ! in_array($to, mb_list_encodings())) {
+            throw new InvalidArgumentException(
+                __METHOD__ . "() expects parameter two, to, to be a valid encoding"
+            );
+        }
+        
+        // if the "from" encoding is given and not valid, short-circuit
+        if ($from !== null && ! in_array($from, mb_list_encodings())) {
+            throw new InvalidArgumentException(
+                __METHOD__ . "() expects parameter three, from, to be a valid "
+                    . "encoding or null"
+            );
+        }
+        
+        // if "from" and "to" encodings are the same, short-circuit
+        if ($from === $to) {
+            return;
+        }
+        
+        // otherwise, get the file's contents
+        $contents = ($this->read)($filename);
         
         // if the contents are already "to" encoded, short-circuit
-        if ($this->check($contents)) {
+        if (mb_check_encoding($contents, $to)) {
             return;   
         }
         
         // otherwise, if a "from" encoding does not exist, attempt to detect it
-        if ( ! $this->from) {
-            $this->from = $this->detect($contents);
+        if ( ! $from) {
+            $from = mb_detect_encoding($contents, mb_detect_order(), true);
+        }
+        
+        // if a "from" encoding was not given or could not be detected, short-circuit
+        if ( ! $from) {
+            throw new OutOfBoundsException(
+                __METHOD__ . "() could not detect the file's character encoding"
+            );    
         }
             
-        // convert the contents' encoding
-        $contents = $this->convert($contents);
+        // otherwise, convert the contents encoding
+        $contents = mb_convert_encoding($contents, $to, $from);
         
         // save the encoded contents
-        $this->write($filename, $contents);
+        ($this->write)($filename, $contents);
         
         return;
     } 
-    
-    
-    /* !Private methods */
-    
-    /**
-     * Returns true if the contents are "to" encoded
-     *
-     * @param   string  $contents  the file's contents
-     * @return  bool
-     * @since   0.1.0
-     */
-    private function check(string $contents): bool
-    {
-        return mb_check_encoding($contents, $this->to);
-    }
-    
-    /**
-     * Converts the contents' character-encoding to the "to" encoding
-     *
-     * @param   string  $contents  the file's contents
-     * @return  string
-     * @since   0.1.0
-     */
-    private function convert(string $contents): string
-    {
-        return mb_convert_encoding($contents, $this->to, $this->from);
-    }
-    
-    /**
-     * Detects the contents' current character-encoding
-     *
-     * Keep in mind, this is not perfect! There are myriad issues attempting to
-     * detect a string's character-encoding. For example, Windows-1252 is almost
-     * never detected, even if the string is 100% Windows-1252. 
-     *
-     * @param   string  $contents  the file's contents
-     * @return  string
-     * @throws  OutOfBoundsException  if the contents' character-encoding could not
-     *     be detected 
-     * @since   0.1.0
-     */
-    private function detect(string $contents): string
-    {
-        $encoding = mb_detect_encoding($contents, mb_detect_order(), true);
-        
-        if ( ! $encoding) {
-            throw new OutOfBoundsException(
-                __METHOD__ . "() expects the file's current character-encoding to "
-                    . "be detectable"
-            );    
-        }
-        
-        return $encoding;
-    }
-    
-    /**
-     * Returns the file's contents
-     *
-     * @param   string  $filename  the file's name
-     * @return  string
-     * @throws  InvalidArgumentException  if $filename is not readable
-     * @since   0.1.0
-     */
-    private function read(string $filename): string
-    {
-        if ( ! is_readable($filename)) {
-            throw new InvalidArgumentException(
-                __METHOD__ . "() expects parameter one, filename, to be readable"
-            );
-        }
-        
-        return file_get_contents($filename);
-    }
-    
-    /**
-     * Writes the file's contents
-     *
-     * @param   string  $filename  the file's name
-     * @param   string  $contents  the file's new contents
-     * @return  void
-     * @throws  InvalidArgumentException  if $filename is not writeable
-     * @since   0.1.0
-     */
-    private function write(string $filename, string $contents)
-    {
-        if ( ! is_writeable($filename)) {
-            throw new InvalidArgumentException(
-                __METHOD__ . "() expects parameter one, filename, to be writeable"
-            );
-        }
-        
-        file_put_contents($filename, $contents);
-        
-        return;
-    }
 }

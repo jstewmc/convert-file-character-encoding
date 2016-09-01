@@ -10,7 +10,9 @@
 		}
 	],
 	"require": {
-		"php": "^7.0"
+		"php": "^7.0",
+		"jstewmc/read-file": "^0.1",
+		"jstewmc/write-file": "^0.1"
 	},
 	"require-dev": {
 		"jstewmc/test-case": "^1.0",
