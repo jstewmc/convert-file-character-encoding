@@ -58,8 +58,6 @@ To prevent erroneously detecting the file's _from_ encoding, you MAY include it 
 
 ```php
 use Jstewmc\EncodeFile\Encode;
-use Jstewmc\ReadFile\Read;
-use Jstewmc\WriteFile\Write;
 
 $service = new Encode(new Read(), new Write());
 
