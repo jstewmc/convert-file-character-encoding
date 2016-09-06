@@ -10,13 +10,10 @@
 		}
 	],
 	"require": {
-		"php": "^7.0",
-		"jstewmc/read-file": "^0.1",
-		"jstewmc/write-file": "^0.1"
-	},
+		"php": "^7.0"
+    },
 	"require-dev": {
-		"jstewmc/test-case": "^1.0",
-		"mikey179/vfsstream": "^1.6"
+		"jstewmc/test-case": "^1.0"
 	},
 	"autoload": {
 		"psr-4": {

@@ -11,8 +11,6 @@ namespace Jstewmc\EncodeFile;
 
 use BadMethodCallException;
 use InvalidArgumentException;
-use Jstewmc\ReadFile\Read;
-use Jstewmc\WriteFile\Write;
 use OutOfBoundsException;
 
 

@@ -9,8 +9,6 @@
 
 namespace Jstewmc\EncodeFile;
 
-use Jstewmc\ReadFile\Read;
-use Jstewmc\WriteFile\Write;
 use Jstewmc\TestCase\TestCase;
 use org\bovigo\vfs\{vfsStream, vfsStreamDirectory, vfsStreamFile};
 
@@ -19,10 +17,17 @@ use org\bovigo\vfs\{vfsStream, vfsStreamDirectory, vfsStreamFile};
  */
 class EncodeTest extends TestCase
 {
+    /* !Private properties */
+    
     /**
-     * @var  vfsStreamDirectory  the "root" virtual file system directory
+     * @var  Read  the read-file service *stub*
      */
-    private $root;
+    private $read;
+
+    /**
+     * @var  Write  the write-file service *mock*
+     */
+    private $write;
     
 	
 	/* !Framework methods */
@@ -30,11 +35,21 @@ class EncodeTest extends TestCase
     /**
      * Called before every test
      *
+     * I'll create a read-file *stub*, because we need to set the service's return
+     * value. I'll also create a write-file *mock*, because we need to verify the
+     * servier's arguments.
+     *
      * @return  void
      */
     public function setUp()
     {
-        $this->root = vfsStream::setup('test');
+        // set the read *stub*
+        $this->read = $this->createMock(Read::class);
+        
+        // set the write-file *mock*
+        $this->write = $this->getMockBuilder(Write::class)
+            ->setMethods(['__invoke'])
+            ->getMock();
         
         return;
     }
@@ -55,13 +70,10 @@ class EncodeTest extends TestCase
      */
     public function testConstructSetsProperties()
     {
-        $read  = new Read();
-        $write = new Write();
+        $service = new Encode($this->read, $this->write);
         
-        $service = new Encode($read, $write);
-        
-        $this->assertSame($read, $this->getProperty('read', $service));
-        $this->assertSame($write, $this->getProperty('write', $service));
+        $this->assertSame($this->read, $this->getProperty('read', $service));
+        $this->assertSame($this->write, $this->getProperty('write', $service));
         
         return;
     }
@@ -76,11 +88,8 @@ class EncodeTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        $filename = vfsStream::url('test/foo.txt');
-        
-        file_put_contents($filename, 'foo');
-        
-        (new Encode(new Read(), new Write()))($filename, 'foo');
+        // note the invalid "to" encoding
+        (new Encode($this->read, $this->write))('foo.txt', 'foo');
         
         return;
     }
@@ -92,11 +101,8 @@ class EncodeTest extends TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
         
-        $filename = vfsStream::url('test/foo.txt');
-        
-        file_put_contents($filename, 'foo');
-        
-        (new Encode(new Read(), new Write()))($filename, 'UTF-8', 'foo');
+        // note the invalid "from" encoding
+        (new Encode($this->read, $this->write))('foo.txt', 'UTF-8', 'foo');
         
         return;
     }
@@ -104,13 +110,10 @@ class EncodeTest extends TestCase
     /**
      * __invoke() should return void if the encodings are equal
      */
-    public function testConstructThrowsExceptionIfEncodingsAreSame()
+    public function testInvokeReturnsVoidIfEncodingsAreSame()
     {
-        $filename = vfsStream::url('test/foo.txt');
-        
-        file_put_contents($filename, 'foo');
-        
-        (new Encode(new Read(), new Write()))($filename, 'UTF-8', 'UTF-8');
+        // note the "from" and "to" encodings are the same
+        (new Encode($this->read, $this->write))('foo.txt', 'UTF-8', 'UTF-8');
         
         return;  
     }
@@ -128,19 +131,15 @@ class EncodeTest extends TestCase
      */
     public function testInvokeReturnsVoidIfTheFileIsToEncoded()
     {
-        $filename = vfsStream::url('test/foo.txt');
-    
-        // set the file's contents to a UTF-8 string
-        $contents = mb_convert_encoding('foo', 'UTF-8');
+        $to = 'UTF-8';
         
-        file_put_contents($filename, $contents);
-        
-        (new Encode(new Read(), new Write()))($filename, 'UTF-8');
-        
-        $contents = file_get_contents($filename);
-        
-        // assert that the file's contents are UTF-8
-        $this->assertTrue(mb_check_encoding($contents, 'UTF-8'));
+        // set the read-file service to return a UTF-8 string
+        $this->read
+            ->method('__invoke')
+            ->willReturn(mb_convert_encoding('foo', $to));
+            
+        // encode the file
+        (new Encode($this->read, $this->write))('foo.txt', $to);
         
         return; 
     }
@@ -150,22 +149,30 @@ class EncodeTest extends TestCase
      */
     public function testInvokeReturnsVoidIftheFileIsNotToEncoded()
     {
-        $filename = vfsStream::url('test/foo.txt');
-    
-        // set the file's contents to an ASCII string
-        $contents = mb_convert_encoding('foo', 'ASCII');
+        // set our file's information...
+        // keep in mind, UTF-32 will not be confused with ASCII, unlike UTF-8
+        //
+        $filename = 'foo.txt';
+        $contents = 'foo';
+        $to       = 'UTF-32';
+        $from     = 'ASCII';
         
-        file_put_contents($filename, $contents);
+        // set the return value for the stub read-file service
+        $this->read
+            ->method('__invoke')
+            ->willReturn(mb_convert_encoding($contents, $from));
+            
+        // set the argument for the mock write-file service
+        $this->write
+            ->expects($this->once())
+            ->method('__invoke')
+            ->with(
+                $this->equalTo($filename),
+                $this->equalTo(mb_convert_encoding($contents, $to))
+            );
         
-        // assert that the file's contents are not valid UTF-32
-        $this->assertFalse(mb_check_encoding($contents, 'UTF-32'));
-        
-        (new Encode(new Read(), new Write()))($filename, 'UTF-32');
-        
-        $contents = file_get_contents($filename);
-        
-        // assert that the file's contents are UTF-32
-        $this->assertTrue(mb_check_encoding($contents, 'UTF-32'));
+        // encode the file
+        (new Encode($this->read, $this->write))('foo.txt', $to);
         
         return;
     }
