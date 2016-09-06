@@ -12,7 +12,7 @@ namespace Jstewmc\EncodeFile;
 /**
  * A write-file service interface
  *
- * @since  0.1.0
+ * @since  0.3.0
  */
 interface Write
 {
@@ -22,7 +22,7 @@ interface Write
      * @param   string  $filename  the file's name
      * @param   string  $contents  the file's contents
      * @return  int
-     * @since   0.1.0
+     * @since   0.3.0
      */ 
     public function __invoke(string $filename, string $contents): int;
 }

@@ -18,7 +18,6 @@ use OutOfBoundsException;
  * The encode-file service
  *
  * @since  0.1.0
- * @since  0.2.0  refactor to use read- and write-file services
  */
 class Encode
 {

@@ -12,7 +12,7 @@ namespace Jstewmc\EncodeFile;
 /**
  * A read-file service interface
  *
- * @since  0.1.0
+ * @since  0.3.0
  */
 interface Read
 {
@@ -21,7 +21,7 @@ interface Read
      *
      * @param   string  $filename  the file's name
      * @return  string
-     * @since   0.1.0
+     * @since   0.3.0
      */ 
     public function __invoke(string $filename): string;
 }
